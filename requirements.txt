@@ -1,6 +1,6 @@
 # AutoCV — stack local (licencias permisivas: MIT, PSF, BSD)
 # SQLAlchemy 2.x — ORM + SQLite
-sqlalchemy>=2.0.36,<3.0
+sqlalchemy>=2.0.50,<3.0
 # Automatización de navegador
 playwright>=1.49.0,<2.0
 # Coincidencia difusa de texto (MIT)
