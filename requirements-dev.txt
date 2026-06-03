@@ -1,0 +1,4 @@
+# Dependencias de desarrollo y CI (no necesarias para ejecutar scrapers en local)
+-r requirements.txt
+ruff>=0.9.0,<1.0
+pytest>=8.0,<9.0
