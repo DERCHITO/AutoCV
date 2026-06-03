@@ -1,0 +1,38 @@
+# Catálogo oficial de labels del repositorio (sincronizado con label-sync).
+# Colores sin # — formato de GitHub API.
+
+- name: feature
+  color: "0e8a16"
+  description: Nueva funcionalidad (rama feature/*)
+
+- name: bug
+  color: "d73a4a"
+  description: Corrección de error (rama fix/*)
+
+- name: hotfix
+  color: "b60205"
+  description: Corrección urgente en producción (rama hotfix/*)
+
+- name: documentation
+  color: "0075ca"
+  description: Solo documentación (rama docs/* o archivos en docs/)
+
+- name: refactor
+  color: "c5def5"
+  description: Refactor sin cambio de comportamiento (rama refactor/*)
+
+- name: test
+  color: "bfd4f2"
+  description: Tests (rama test/* o archivos en tests/)
+
+- name: chore
+  color: "fef2c0"
+  description: Mantenimiento, tooling (rama chore/*)
+
+- name: ci/cd
+  color: "1d76db"
+  description: CI/CD, GitHub Actions, plantillas
+
+- name: dependencies
+  color: "0366d6"
+  description: Dependencias (requirements, lockfiles, etc.)
