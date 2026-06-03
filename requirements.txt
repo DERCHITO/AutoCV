@@ -6,7 +6,7 @@ playwright>=1.49.0,<2.0
 # Coincidencia difusa de texto (MIT)
 rapidfuzz>=3.10.0,<4.0
 # Validación y modelos de datos (MIT)
-pydantic>=2.10.0,<3.0
+pydantic>=2.13.4,<3.0
 # Cliente HTTP async/sync (BSD)
 httpx>=0.28.0,<1.0
 # Variables de entorno desde .env (BSD)
