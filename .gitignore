@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# AutoCV — datos locales y sensibles
+database/*.sqlite
+database/*.db
+logs/*.log
+assets/mi_cv.pdf
+.env.local

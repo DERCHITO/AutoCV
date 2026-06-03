@@ -1,0 +1,22 @@
+# n8n self-hosted — solo local, sin servicios cloud de pago.
+# Requiere: Docker Desktop (Windows) o Docker Engine + Docker Compose v2.
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: autocv-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - GENERIC_TIMEZONE=America/Argentina/Buenos_Aires
+      - TZ=America/Argentina/Buenos_Aires
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # Monta assets del proyecto para que los workflows lean profile/keywords/CV
+      - ../assets:/data/assets:ro
+
+volumes:
+  n8n_data:
