@@ -21,3 +21,4 @@ Puente n8n: `python -m app.core.cli serve` → http://localhost:8765/health
 
 - Flujo de ramas y CI: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
 - **Config obligatoria en GitHub** (proteger `main`): [docs/GITHUB_BRANCH_PROTECTION.md](docs/GITHUB_BRANCH_PROTECTION.md)
+- Labels automáticas en PRs: [docs/PR_LABELS.md](docs/PR_LABELS.md)

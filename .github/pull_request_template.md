@@ -21,6 +21,7 @@ pytest -q
 ## Checklist
 
 - [ ] La rama sigue el prefijo `feature/`, `fix/` o `chore/`
-- [ ] CI en verde (`lint`, `test`, `smoke`)
+- [ ] CI en verde (`lint`, `test`, `smoke`, `require-labels`)
+- [ ] El PR tiene al menos una label (se aplican solas según rama/archivos; ver `.github/labeler.yml`)
 - [ ] Sin archivos sensibles (`.env`, `*.sqlite`, `assets/mi_cv.pdf`)
 - [ ] Documentación actualizada si aplica

@@ -1,0 +1,46 @@
+# Reglas para actions/labeler — rama (head-branch) y archivos (changed-files).
+# Variantes Feature/, Fix/, etc. para compatibilidad en Windows.
+
+feature:
+  - head-branch: ["^feature/", "^Feature/"]
+
+bug:
+  - head-branch: ["^fix/", "^Fix/"]
+
+hotfix:
+  - head-branch: ["^hotfix/", "^Hotfix/"]
+
+documentation:
+  - head-branch: ["^docs/", "^Docs/"]
+  - changed-files:
+      - any-glob-to-any-file: "docs/**"
+
+refactor:
+  - head-branch: ["^refactor/", "^Refactor/"]
+
+test:
+  - head-branch: ["^test/", "^Test/"]
+  - changed-files:
+      - any-glob-to-any-file: "tests/**"
+
+chore:
+  - head-branch: ["^chore/", "^Chore/"]
+
+ci/cd:
+  - changed-files:
+      - any-glob-to-any-file: ".github/**"
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "requirements.txt"
+          - "requirements-dev.txt"
+          - "requirements/*.txt"
+          - "pyproject.toml"
+          - "poetry.lock"
+          - "Pipfile"
+          - "Pipfile.lock"
+          - "package.json"
+          - "package-lock.json"
+          - "pnpm-lock.yaml"
+          - "yarn.lock"

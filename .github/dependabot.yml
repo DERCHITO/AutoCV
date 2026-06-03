@@ -5,6 +5,8 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    labels:
+      - dependencies
     groups:
       dev-dependencies:
         patterns:
@@ -16,3 +18,6 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - ci/cd

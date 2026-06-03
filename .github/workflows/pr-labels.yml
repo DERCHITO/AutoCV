@@ -1,0 +1,73 @@
+# Etiquetado automático de PRs y bloqueo de merge si no hay ninguna label.
+name: PR Labels
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: pr-labels-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  sync-labels:
+    name: sync-labels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Asegurar que existen todas las labels del catálogo
+        uses: EndBug/label-sync@v2
+        with:
+          config-file: .github/labels.yml
+          delete-other-labels: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  apply-labels:
+    name: apply-labels
+    needs: sync-labels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Aplicar labels según rama y archivos
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+
+  require-labels:
+    name: require-labels
+    needs: apply-labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fallar si el PR no tiene ninguna label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner,
+              repo,
+              issue_number,
+            });
+
+            if (labels.length === 0) {
+              core.setFailed(
+                "El PR debe tener al menos una label. " +
+                "Usa ramas feature/*, fix/*, chore/*, etc., o modifica archivos " +
+                "en docs/, tests/, .github/ o requirements*. Revisa .github/labeler.yml."
+              );
+              return;
+            }
+
+            core.info(`Labels en el PR (${labels.length}): ${labels.map((l) => l.name).join(", ")}`);
