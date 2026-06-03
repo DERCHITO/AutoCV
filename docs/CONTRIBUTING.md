@@ -28,13 +28,53 @@
 
 ## CI local (antes del PR)
 
+Si `Activate.ps1` falla por *execution policy*, usa las rutas directas (abajo) o [PowerShell: política de ejecución](#powershell-política-de-ejecución).
+
+**Sin activar el venv (recomendado en Windows):**
+
 ```powershell
-.\.venv\Scripts\Activate.ps1
+cd C:\Users\user\Documents\GitHub\AutoCV
+.\.venv\Scripts\pip.exe install -r requirements-dev.txt
+.\.venv\Scripts\ruff.exe check app tests scripts
+.\.venv\Scripts\pytest.exe -q
+.\.venv\Scripts\python.exe -m app.core.cli health
+```
+
+O un solo comando:
+
+```powershell
+.\scripts\ci-local.ps1
+```
+
+**Con venv activado** (tras `Activate.ps1` o `activate.bat`):
+
+```powershell
 pip install -r requirements-dev.txt
 ruff check app tests scripts
 pytest -q
 python -m app.core.cli health
 ```
+
+### PowerShell: política de ejecución
+
+Error: *«la ejecución de scripts está deshabilitada en este sistema»*.
+
+**Opción A — Una vez por usuario (recomendado):**
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+Cierra y abre la terminal; luego `.\.venv\Scripts\Activate.ps1`.
+
+**Opción B — CMD en lugar de PowerShell:**
+
+```cmd
+cd C:\Users\crisb\Documents\GitHub\AutoCV
+.venv\Scripts\activate.bat
+```
+
+**Opción C — No activar:** usa `.\.venv\Scripts\pip.exe`, `ruff.exe`, `pytest.exe` (primer bloque de esta sección).
 
 ## Protección de `main`
 
