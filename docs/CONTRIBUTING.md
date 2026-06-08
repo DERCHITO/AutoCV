@@ -88,3 +88,5 @@ Sigue la guía: [GITHUB_BRANCH_PROTECTION.md](GITHUB_BRANCH_PROTECTION.md)
 - `database/*.sqlite`
 - `assets/mi_cv.pdf`
 - `.venv/`
+
+.
