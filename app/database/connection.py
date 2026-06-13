@@ -24,7 +24,7 @@ supabase: Client = create_client(URL, KEY)
 def verificar_conexion():
     try:
         print("⚡ Intentando insertar un dato de prueba en Supabase...")
-        
+
         resultado = supabase.table("fuentes").insert([
             {"nombre_fuente": "Laborum"},
             {"nombre_fuente": "GetOnBoard"},
