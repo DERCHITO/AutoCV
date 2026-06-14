@@ -10,4 +10,4 @@ pydantic>=2.10.0,<3.0
 # Cliente HTTP async/sync (BSD)
 httpx>=0.28.0,<1.0
 # Variables de entorno desde .env (BSD)
-python-dotenv>=1.0.0,<2.0
+python-dotenv>=1.2.2,<2.0
