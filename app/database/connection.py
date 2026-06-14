@@ -1,6 +1,7 @@
 import os
+
 from dotenv import load_dotenv
-from supabase import create_client, Client
+from supabase import Client, create_client
 
 load_dotenv()
 
@@ -22,7 +23,7 @@ supabase: Client = create_client(URL, KEY)
 def verificar_conexion():
     try:
         print("⚡ Intentando insertar un dato de prueba en Supabase...")
-        
+
         resultado = supabase.table("fuentes").insert([
             {"nombre_fuente": "Laborum"},
             {"nombre_fuente": "GetOnBoard"},
@@ -31,7 +32,7 @@ def verificar_conexion():
 
         resultado = supabase.table("fuentes").select("*").execute()
         print(resultado.data)
-        
+
     except Exception as e:
         print(f"❌ Error al interactuar con la base de datos: {e}")
 
