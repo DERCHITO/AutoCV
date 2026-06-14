@@ -4,24 +4,25 @@ from supabase import create_client, Client
 
 load_dotenv()
 
-URL = os.environ.get("SUPABASE_URL", "https://mockproject.supabase.co")
-KEY = os.environ.get("SUPABASE_KEY", "mock_key_characters_long_enough_for_test")
+URL = os.environ.get("SUPABASE_URL")
+KEY = os.environ.get("SUPABASE_KEY")
 
 print(f"🔍 ¿Detecta URL?: {'SÍ' if URL else 'NO'}")
 print(f"🔍 ¿Detecta KEY?: {'SÍ' if KEY else 'NO'}")
 if KEY:
     print(f"🔍 Longitud de la KEY: {len(KEY)} caracteres")
 
+if not URL or not KEY:
+    raise ValueError("❌ Error: No se encontraron las credenciales...")
+
+
 supabase: Client = create_client(URL, KEY)
+
 
 def verificar_conexion():
     try:
         print("⚡ Intentando insertar un dato de prueba en Supabase...")
         
-        if "mockproject" in URL:
-            print("✨ Entorno de test detectado (GitHub Actions). Saltando conexión real. ¡Todo OK!  ")
-            return
-
         resultado = supabase.table("fuentes").insert([
             {"nombre_fuente": "Laborum"},
             {"nombre_fuente": "GetOnBoard"},
