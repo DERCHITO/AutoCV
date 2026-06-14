@@ -223,3 +223,4 @@ database/*.db
 logs/*.log
 assets/mi_cv.pdf
 .env.local
+.env.example
