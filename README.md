@@ -17,6 +17,23 @@ Configuración sensible: `Copy-Item .env.example .env` → editar `.env` (no se 
 
 Puente n8n: `python -m app.core.cli serve` → http://localhost:8765/health
 
+## Búsqueda de empleo (scrapers)
+
+Documentación: [docs/BUSQUEDA_EMPLEOS.md](docs/BUSQUEDA_EMPLEOS.md)
+
+```powershell
+# Modo interactivo (pregunta puesto, nivel y cantidad)
+python app\scrapers\base.py
+
+# Desarrollador junior — 10 ofertas por portal
+python app\scrapers\base.py desarrollador 10
+
+# Con extras (python, remoto, etc.)
+python app\scrapers\base.py --rol desarrollador --nivel junior python 10
+```
+
+Portales: Laborum, Get on Board y CompuTrabajo.
+
 ## Desarrollo y PRs
 
 - Flujo de ramas y CI: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
