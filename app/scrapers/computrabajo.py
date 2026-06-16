@@ -17,8 +17,6 @@ from app.scrapers.base import BaseScraper
 class CompuTrabajoScraper(BaseScraper):
     """Scraper de ofertas de CompuTrabajo Chile vía listados HTML."""
 
-    LIMITE_DEFAULT = 15
-    QUERY_DEFAULT = "desarrollador"
     OFERTAS_POR_PAGINA = 20
 
     def __init__(self, url_base: str = "https://cl.computrabajo.com"):
@@ -42,7 +40,7 @@ class CompuTrabajoScraper(BaseScraper):
         query: str | None,
         categoria: str | None,
         ciudad: str | None,
-    ) -> str:
+    ) -> str | None:
         if categoria and ciudad:
             return f"/empleos-de-{self._slug(categoria)}-en-{self._slug(ciudad)}"
         if categoria:
@@ -51,7 +49,7 @@ class CompuTrabajoScraper(BaseScraper):
             return f"/trabajo-de-{self._slug(query)}-en-{self._slug(ciudad)}"
         if query:
             return f"/trabajo-de-{self._slug(query)}"
-        return f"/trabajo-de-{self._slug(self.QUERY_DEFAULT)}"
+        return None
 
     def _obtener_html(self, ruta: str, pagina: int) -> str | None:
         params = {"p": pagina} if pagina > 1 else None
@@ -67,54 +65,66 @@ class CompuTrabajoScraper(BaseScraper):
             print(f"Error al consultar CompuTrabajo: {e}")
             return None
 
-    def _titulos_desde_html(self, html: str, limite: int) -> list[str]:
+    def _titulos_desde_html(self, html: str) -> list[str]:
         sopa = BeautifulSoup(html, "html.parser")
         titulos: list[str] = []
-        vistos: set[str] = set()
 
         for enlace in sopa.select("h2 a"):
             titulo = enlace.get_text(strip=True)
-            if not titulo or titulo in vistos:
-                continue
-            vistos.add(titulo)
-            titulos.append(titulo)
-            if len(titulos) >= limite:
-                break
+            if titulo:
+                titulos.append(titulo)
 
         return titulos
 
     def extraer_titulos(
         self,
-        limite: int = LIMITE_DEFAULT,
-        query: str | None = QUERY_DEFAULT,
+        query: str | None = None,
         categoria: str | None = None,
         ciudad: str | None = None,
         page: int = 1,
+        max_resultados: int | None = None,
     ) -> list[str]:
-        """Devuelve hasta `limite` títulos de ofertas publicadas en CompuTrabajo."""
-        if limite < 1:
+        """Devuelve titulos para la consulta. Pagina hasta agotar o alcanzar max_resultados."""
+        ruta = self._construir_ruta(query, categoria, ciudad)
+        if not ruta:
+            print("Error: debes indicar `query` o `categoria`.")
             return []
 
-        ruta = self._construir_ruta(query, categoria, ciudad)
         titulos: list[str] = []
+        vistos: set[str] = set()
         pagina = max(page, 1)
 
-        while len(titulos) < limite:
+        while True:
+            if max_resultados is not None and len(titulos) >= max_resultados:
+                break
+
             html = self._obtener_html(ruta, pagina)
             if not html:
                 break
 
-            nuevos = self._titulos_desde_html(html, limite - len(titulos))
+            nuevos = self._titulos_desde_html(html)
             if not nuevos:
                 break
 
-            titulos.extend(nuevos)
+            agregados = 0
+            for titulo in nuevos:
+                if titulo in vistos:
+                    continue
+                vistos.add(titulo)
+                titulos.append(titulo)
+                agregados += 1
+                if max_resultados is not None and len(titulos) >= max_resultados:
+                    break
 
-            if len(nuevos) < self.OFERTAS_POR_PAGINA:
+            if max_resultados is not None and len(titulos) >= max_resultados:
+                break
+            if agregados == 0 or len(nuevos) < self.OFERTAS_POR_PAGINA:
                 break
             pagina += 1
 
-        return titulos[:limite]
+        if max_resultados is not None:
+            return titulos[:max_resultados]
+        return titulos
 
     def extraer_datos(self, endpoint: str = "") -> list[str]:
         if endpoint.startswith("categoria:"):
@@ -125,17 +135,8 @@ class CompuTrabajoScraper(BaseScraper):
             return self.extraer_titulos(query=query, categoria=None)
         if endpoint:
             return self.extraer_titulos(query=endpoint, categoria=None)
-        return self.extraer_titulos()
+        return []
 
 
 if __name__ == "__main__":
-    print("--- Scraper CompuTrabajo (15 ofertas, query desarrollador) ---")
-
-    scraper = CompuTrabajoScraper()
-    titulos = scraper.extraer_titulos(limite=15, query="desarrollador")
-
-    if not titulos:
-        print("No se encontraron ofertas.")
-    else:
-        for i, titulo in enumerate(titulos, start=1):
-            print(f"{i:2}. {titulo}")
+    print("Usa el orquestador: python app/scrapers/base.py")

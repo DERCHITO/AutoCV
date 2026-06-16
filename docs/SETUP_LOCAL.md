@@ -44,6 +44,15 @@ O en un solo paso:
 .\scripts\setup.ps1
 ```
 
+## 1.1 Búsqueda de ofertas (scrapers)
+
+Ver guía completa: [BUSQUEDA_EMPLEOS.md](BUSQUEDA_EMPLEOS.md)
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python app\scrapers\base.py desarrollador 10
+```
+
 ## 2. Assets
 
 | Archivo | Uso |

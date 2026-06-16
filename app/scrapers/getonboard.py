@@ -14,8 +14,6 @@ class GetOnBoardScraper(BaseScraper):
     """Scraper de ofertas de Get on Board vía API pública v0."""
 
     API_PREFIX = "/api/v0"
-    LIMITE_DEFAULT = 15
-    CATEGORIA_DEFAULT = "programacion"
     PER_PAGE_MAX = 120
 
     def __init__(self, url_base: str = "https://www.getonbrd.com", lang: str = "es"):
@@ -46,33 +44,39 @@ class GetOnBoardScraper(BaseScraper):
             print("Error: Get on Board devolvio una respuesta no JSON.")
             return None
 
-    def _titulos_desde_data(self, data: list, limite: int) -> list[str]:
+    def _titulos_desde_data(self, data: list) -> list[str]:
         titulos: list[str] = []
         for oferta in data:
             titulo = oferta.get("attributes", {}).get("title", "").strip()
             if titulo:
                 titulos.append(titulo)
-            if len(titulos) >= limite:
-                break
         return titulos
 
     def extraer_titulos(
         self,
-        limite: int = LIMITE_DEFAULT,
-        categoria: str | None = CATEGORIA_DEFAULT,
+        categoria: str | None = None,
         query: str | None = None,
         page: int = 1,
+        max_resultados: int | None = None,
     ) -> list[str]:
-        """Devuelve hasta `limite` títulos de ofertas publicadas en Get on Board."""
-        if limite < 1:
+        """Devuelve titulos para la consulta. Pagina hasta agotar o alcanzar max_resultados."""
+        if not query and not categoria:
+            print("Error: debes indicar `categoria` o `query`.")
             return []
 
         titulos: list[str] = []
         pagina = max(page, 1)
 
-        while len(titulos) < limite:
-            faltantes = limite - len(titulos)
-            per_page = min(faltantes, self.PER_PAGE_MAX)
+        while True:
+            if max_resultados is not None and len(titulos) >= max_resultados:
+                break
+
+            faltantes = (
+                self.PER_PAGE_MAX
+                if max_resultados is None
+                else max_resultados - len(titulos)
+            )
+            per_page = min(self.PER_PAGE_MAX, faltantes)
 
             if query:
                 params = {
@@ -82,16 +86,13 @@ class GetOnBoardScraper(BaseScraper):
                     "lang": self.lang,
                 }
                 payload = self._get_json("/search/jobs", params)
-            elif categoria:
+            else:
                 params = {
                     "page": pagina,
                     "per_page": per_page,
                     "lang": self.lang,
                 }
                 payload = self._get_json(f"/categories/{categoria}/jobs", params)
-            else:
-                print("Error: debes indicar `categoria` o `query`.")
-                return titulos
 
             if not payload:
                 break
@@ -100,7 +101,13 @@ class GetOnBoardScraper(BaseScraper):
             if not data:
                 break
 
-            titulos.extend(self._titulos_desde_data(data, limite))
+            for titulo in self._titulos_desde_data(data):
+                titulos.append(titulo)
+                if max_resultados is not None and len(titulos) >= max_resultados:
+                    break
+
+            if max_resultados is not None and len(titulos) >= max_resultados:
+                break
 
             meta = payload.get("meta", {})
             total_pages = meta.get("total_pages", pagina)
@@ -108,7 +115,9 @@ class GetOnBoardScraper(BaseScraper):
                 break
             pagina += 1
 
-        return titulos[:limite]
+        if max_resultados is not None:
+            return titulos[:max_resultados]
+        return titulos
 
     def extraer_datos(self, endpoint: str = "") -> list[str]:
         if endpoint.startswith("search:"):
@@ -116,17 +125,8 @@ class GetOnBoardScraper(BaseScraper):
             return self.extraer_titulos(query=query, categoria=None)
         if endpoint:
             return self.extraer_titulos(categoria=endpoint)
-        return self.extraer_titulos()
+        return []
 
 
 if __name__ == "__main__":
-    print("--- Scraper Get on Board (15 ofertas, categoria programacion) ---")
-
-    scraper = GetOnBoardScraper()
-    titulos = scraper.extraer_titulos(limite=15, categoria="programacion")
-
-    if not titulos:
-        print("No se encontraron ofertas.")
-    else:
-        for i, titulo in enumerate(titulos, start=1):
-            print(f"{i:2}. {titulo}")
+    print("Usa el orquestador: python app/scrapers/base.py")
