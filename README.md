@@ -7,8 +7,8 @@ Automatización local de postulaciones (Python + n8n + SQLite + Playwright + Oll
 Documentación completa: [docs/SETUP_LOCAL.md](docs/SETUP_LOCAL.md)
 
 ```powershell
-cd c:\Users\crisb\Documents\GitHub\AutoCV
-.\scripts\setup.ps1
+cd c:\Users\user\Documents\GitHub\AutoCV
+.\.venv\Scripts\Activate.ps1
 ```
 
 Copia tu CV: `Copy-Item "C:\ruta\tu_cv.pdf" ".\assets\mi_cv.pdf"`
