@@ -1,57 +1,39 @@
-"""Engine y sesión SQLAlchemy 2.x contra SQLite local."""
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
 
-from __future__ import annotations
+load_dotenv()
 
-from collections.abc import Generator
+URL = os.environ.get("SUPABASE_URL")
+KEY = os.environ.get("SUPABASE_KEY")
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session, sessionmaker
+print(f"🔍 ¿Detecta URL?: {'SÍ' if URL else 'NO'}")
+print(f"🔍 ¿Detecta KEY?: {'SÍ' if KEY else 'NO'}")
+if KEY:
+    print(f"🔍 Longitud de la KEY: {len(KEY)} caracteres")
 
-from app.core.config import get_database_url
-from app.database.models import Base
-
-_engine = None
-_SessionLocal = None
-
-
-def get_engine():
-    global _engine, _SessionLocal
-    if _engine is None:
-        url = get_database_url()
-        _engine = create_engine(
-            url,
-            connect_args={"check_same_thread": False},
-            echo=False,
-        )
-        _SessionLocal = sessionmaker(bind=_engine, autoflush=False, autocommit=False)
-    return _engine
+if not URL or not KEY:
+    raise ValueError("❌ Error: No se encontraron las credenciales...")
 
 
-def get_session_factory():
-    get_engine()
-    return _SessionLocal
+supabase: Client = create_client(URL, KEY)
 
 
-def get_db() -> Generator[Session, None, None]:
-    factory = get_session_factory()
-    session = factory()
+def verificar_conexion():
     try:
-        yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+        print("⚡ Intentando insertar un dato de prueba en Supabase...")
+        
+        resultado = supabase.table("fuentes").insert([
+            {"nombre_fuente": "Laborum"},
+            {"nombre_fuente": "GetOnBoard"},
+            {"nombre_fuente": "CompuTrabajo"}
+        ]).execute()
 
+        resultado = supabase.table("fuentes").select("*").execute()
+        print(resultado.data)
+        
+    except Exception as e:
+        print(f"❌ Error al interactuar con la base de datos: {e}")
 
-def init_database() -> None:
-    engine = get_engine()
-    Base.metadata.create_all(bind=engine)
-
-
-def check_database() -> bool:
-    engine = get_engine()
-    with engine.connect() as conn:
-        conn.execute(text("SELECT 1"))
-    return True
+if __name__ == "__main__":
+    verificar_conexion()
