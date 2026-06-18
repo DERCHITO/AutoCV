@@ -483,6 +483,8 @@ if __name__ == "__main__":
     if __package__ in (None, ""):
         sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+    from app.database import insertar_fila_trabajo
+
     if len(sys.argv) > 1:
         perfil, palabras, limite = _parsear_argumentos(sys.argv[1:])
     else:
@@ -504,9 +506,14 @@ if __name__ == "__main__":
 
     orchestrator = ScraperOrchestrator(limite_por_fuente=limite)
     resultados = orchestrator.buscar(perfil=perfil, palabras=palabras)
+    
     ScraperOrchestrator.imprimir_resultados(
         resultados,
         perfil=perfil,
         palabras=palabras,
         limite_por_fuente=limite,
     )
+    print("--- Guardando ofertas en la base de datos ---")
+    for fuente, titulos in resultados.items():
+        for titulo in titulos:
+            insertar_fila_trabajo(titulo=titulo, compañia="Desconocida", ubicacion=False)
