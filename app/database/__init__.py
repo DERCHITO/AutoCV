@@ -1,13 +1,7 @@
-"""Capa de persistencia SQLite (SQLAlchemy)."""
+"""Capa de persistencia con Supabase."""
 
-from app.database.connection import check_database, get_db, get_engine, init_database
-from app.database.models import Application, Base
+from app.database.operaciones import insertar_fila_trabajo
 
 __all__ = [
-    "Application",
-    "Base",
-    "check_database",
-    "get_db",
-    "get_engine",
-    "init_database",
+    "insertar_fila_trabajo",
 ]
