@@ -5,7 +5,7 @@ Los archivos en `.github/workflows/` ejecutan CI, pero **bloquear push directo a
 ## Requisitos previos
 
 1. Repositorio creado en GitHub y código subido (`git remote add origin ...`).
-2. Al menos **un PR** ejecutado para que aparezcan los checks `lint`, `test`, `smoke`, `require-labels` en la lista de status checks.
+2. Al menos **un PR** ejecutado para que aparezcan los checks `lint`, `require-labels` en la lista de status checks.
 
 ## Paso 1 — Proteger `main`
 
@@ -19,7 +19,7 @@ Los archivos en `.github/workflows/` ejecutan CI, pero **bloquear push directo a
 | Dismiss stale pull request approvals when new commits are pushed | ✅ |
 | Require status checks to pass before merging | ✅ |
 | Require branches to be up to date before merging | ✅ (recomendado) |
-| Status checks that are required | `lint`, `test`, `smoke`, `require-labels` |
+| Status checks that are required | `lint`, `require-labels` |
 | Require conversation resolution before merging | ✅ (recomendado) |
 | Require linear history | ✅ (recomendado con Squash merge) |
 | Do not allow bypassing the above settings | ✅ |
@@ -65,8 +65,6 @@ Debe **fallar** con error de rama protegida.
 | Job / workflow | Qué valida |
 |----------------|------------|
 | `lint` | Ruff + que no exista `.env` commiteado |
-| `test` | pytest |
-| `smoke` | `python -m app.core.cli health` |
 | `require-labels` | El PR tiene al menos una label (automática o manual) |
 
 Etiquetado automático: ver [PR_LABELS.md](PR_LABELS.md).

@@ -20,8 +20,6 @@ refactor:
 
 test:
   - head-branch: ["^test/", "^Test/"]
-  - changed-files:
-      - any-glob-to-any-file: "tests/**"
 
 chore:
   - head-branch: ["^chore/", "^Chore/"]
