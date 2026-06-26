@@ -506,7 +506,7 @@ if __name__ == "__main__":
 
     orchestrator = ScraperOrchestrator(limite_por_fuente=limite)
     resultados = orchestrator.buscar(perfil=perfil, palabras=palabras)
-    
+
     ScraperOrchestrator.imprimir_resultados(
         resultados,
         perfil=perfil,
