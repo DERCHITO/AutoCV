@@ -506,7 +506,7 @@ if __name__ == "__main__":
 
     orchestrator = ScraperOrchestrator(limite_por_fuente=limite)
     resultados = orchestrator.buscar(perfil=perfil, palabras=palabras)
-    
+
     ScraperOrchestrator.imprimir_resultados(
         resultados,
         perfil=perfil,
@@ -517,4 +517,3 @@ if __name__ == "__main__":
     for fuente, titulos in resultados.items():
         for titulo in titulos:
             insertar_fila_trabajo(titulo=titulo, compañia="Desconocida", ubicacion=False)
-            
