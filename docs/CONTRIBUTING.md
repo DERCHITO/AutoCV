@@ -14,7 +14,7 @@
    git push -u origin feature/nombre-corto
    ```
 4. Abre un **Pull Request** hacia `main` en GitHub.
-5. Espera a que CI pase: `lint`, `test`, `smoke`.
+5. Espera a que CI pase: `lint`, `require-labels`.
 6. Tras revisión (si aplica), merge con **Squash merge**.
 
 ### Prefijos de rama
@@ -35,9 +35,7 @@ Si `Activate.ps1` falla por *execution policy*, usa las rutas directas (abajo) o
 ```powershell
 cd C:\Users\user\Documents\GitHub\AutoCV
 .\.venv\Scripts\pip.exe install -r requirements-dev.txt
-.\.venv\Scripts\ruff.exe check app tests scripts
-.\.venv\Scripts\pytest.exe -q
-.\.venv\Scripts\python.exe -m app.core.cli health
+.\.venv\Scripts\ruff.exe check app scripts
 ```
 
 O un solo comando:
@@ -50,9 +48,7 @@ O un solo comando:
 
 ```powershell
 pip install -r requirements-dev.txt
-ruff check app tests scripts
-pytest -q
-python -m app.core.cli health
+ruff check app scripts
 ```
 
 ### PowerShell: política de ejecución
@@ -74,7 +70,7 @@ cd C:\Users\crisb\Documents\GitHub\AutoCV
 .venv\Scripts\activate.bat
 ```
 
-**Opción C — No activar:** usa `.\.venv\Scripts\pip.exe`, `ruff.exe`, `pytest.exe` (primer bloque de esta sección).
+**Opción C — No activar:** usa `.\.venv\Scripts\pip.exe`, `ruff.exe` (primer bloque de esta sección).
 
 ## Protección de `main`
 

@@ -25,6 +25,6 @@ Variantes con mayúscula inicial (`Feature/`) también aplican.
 
 ## Branch protection
 
-Añade **`require-labels`** a los status checks obligatorios junto a `lint`, `test`, `smoke`.
+Añade **`require-labels`** a los status checks obligatorios junto a `lint`.
 
 Ver [GITHUB_BRANCH_PROTECTION.md](GITHUB_BRANCH_PROTECTION.md).

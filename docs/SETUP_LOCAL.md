@@ -14,7 +14,6 @@ Arquitectura híbrida: **Python + n8n + SQLite + Playwright**, 100 % local y ope
 ├── logs/
 ├── n8n/
 ├── scripts/
-└── tests/
 ```
 
 ## 1. Python (venv + dependencias + Playwright)

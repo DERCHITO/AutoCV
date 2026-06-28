@@ -23,7 +23,7 @@
 
 - name: test
   color: "bfd4f2"
-  description: Tests (rama test/* o archivos en tests/)
+  description: Tests (rama test/*)
 
 - name: chore
   color: "fef2c0"

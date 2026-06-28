@@ -15,13 +15,13 @@
 ```powershell
 # ejemplo
 .\.venv\Scripts\Activate.ps1
-pytest -q
+.\scripts\ci-local.ps1
 ```
 
 ## Checklist
 
 - [ ] La rama sigue el prefijo `feature/`, `fix/` o `chore/`
-- [ ] CI en verde (`lint`, `test`, `smoke`, `require-labels`)
+- [ ] CI en verde (`lint`, `require-labels`)
 - [ ] El PR tiene al menos una label (se aplican solas según rama/archivos; ver `.github/labeler.yml`)
 - [ ] Sin archivos sensibles (`.env`, `*.sqlite`, `assets/mi_cv.pdf`)
 - [ ] Documentación actualizada si aplica

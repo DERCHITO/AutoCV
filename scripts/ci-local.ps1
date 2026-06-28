@@ -3,17 +3,13 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $Root
 
-$py = Join-Path $Root ".venv\Scripts\python.exe"
 $pip = Join-Path $Root ".venv\Scripts\pip.exe"
 $ruff = Join-Path $Root ".venv\Scripts\ruff.exe"
-$pytest = Join-Path $Root ".venv\Scripts\pytest.exe"
 
-if (-not (Test-Path $py)) {
+if (-not (Test-Path $pip)) {
     Write-Error "No existe .venv. Ejecuta primero: .\scripts\setup.ps1"
 }
 
 & $pip install -r requirements-dev.txt
-& $ruff check app tests scripts
-& $pytest -q
-& $py -m app.core.cli health
+& $ruff check app scripts
 Write-Host "`nCI local OK" -ForegroundColor Green

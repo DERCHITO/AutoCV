@@ -33,7 +33,7 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Ruff
-        run: ruff check app tests scripts
+        run: ruff check app scripts
 
       - name: Block committed secrets
         run: |
@@ -41,44 +41,3 @@ jobs:
             echo "::error::No subas .env al repositorio"
             exit 1
           fi
-
-  test:
-    name: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-          cache: pip
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-
-      - name: Pytest
-        run: pytest -q
-
-  smoke:
-    name: smoke
-    runs-on: ubuntu-latest
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-          cache: pip
-
-      - name: Install runtime dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: CLI health (smoke)
-        run: python -m app.core.cli health

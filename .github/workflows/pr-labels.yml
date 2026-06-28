@@ -65,7 +65,7 @@ jobs:
               core.setFailed(
                 "El PR debe tener al menos una label. " +
                 "Usa ramas feature/*, fix/*, chore/*, etc., o modifica archivos " +
-                "en docs/, tests/, .github/ o requirements*. Revisa .github/labeler.yml."
+                "en docs/, .github/ o requirements*. Revisa .github/labeler.yml."
               );
               return;
             }
