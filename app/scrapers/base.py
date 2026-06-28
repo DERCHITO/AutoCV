@@ -1,13 +1,19 @@
 import os
-from dotenv import load_dotenv
 import re
 import sys
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+
+from app.scrapers.models import OfertaLaboral
+from app.scrapers.preguntas import MSG_SIN_PREGUNTAS
 
 
 class BaseScraper:
@@ -207,34 +213,34 @@ class ScraperOrchestrator:
         fuente: str,
         palabra: str | None,
         max_resultados: int,
-    ) -> list[str]:
+    ) -> list[OfertaLaboral]:
         scraper = self._scrapers[fuente]
 
         if fuente == "laborum":
-            return scraper.extraer_titulos(
+            return scraper.extraer_ofertas(
                 query=palabra or "",
                 max_resultados=max_resultados,
             )
 
         if fuente == "getonboard":
             if palabra:
-                return scraper.extraer_titulos(
+                return scraper.extraer_ofertas(
                     query=palabra,
                     categoria=None,
                     max_resultados=max_resultados,
                 )
-            return scraper.extraer_titulos(
+            return scraper.extraer_ofertas(
                 categoria="programacion",
                 max_resultados=max_resultados,
             )
 
         if palabra:
-            return scraper.extraer_titulos(
+            return scraper.extraer_ofertas(
                 query=palabra,
                 categoria=None,
                 max_resultados=max_resultados,
             )
-        return scraper.extraer_titulos(
+        return scraper.extraer_ofertas(
             categoria="informatica",
             query=None,
             max_resultados=max_resultados,
@@ -245,7 +251,7 @@ class ScraperOrchestrator:
         fuente: str,
         perfil: PerfilBusqueda | None = None,
         palabras: list[str] | None = None,
-    ) -> list[str]:
+    ) -> list[OfertaLaboral]:
         if fuente not in self._scrapers:
             raise ValueError(f"Fuente desconocida: {fuente}. Usa: {', '.join(self.FUENTES)}")
 
@@ -256,7 +262,7 @@ class ScraperOrchestrator:
             consultas = palabras if palabras else self.CONSULTAS_POR_DEFECTO[fuente]
             filtrar_nivel = False
 
-        acumulado: list[str] = []
+        acumulado: list[OfertaLaboral] = []
         vistos: set[str] = set()
         buffer = self.limite_por_fuente * 4 if filtrar_nivel else self.limite_por_fuente
 
@@ -270,13 +276,13 @@ class ScraperOrchestrator:
             etiqueta = palabra if palabra else "(general)"
             self._log(f"   Buscando: {etiqueta} ...")
 
-            for titulo in self._consultar_scraper(fuente, palabra, faltantes):
-                if titulo in vistos:
+            for oferta in self._consultar_scraper(fuente, palabra, faltantes):
+                if oferta.titulo in vistos:
                     continue
-                if perfil and filtrar_nivel and not self._coincide_nivel(titulo, perfil):
+                if perfil and filtrar_nivel and not self._coincide_nivel(oferta.titulo, perfil):
                     continue
-                vistos.add(titulo)
-                acumulado.append(titulo)
+                vistos.add(oferta.titulo)
+                acumulado.append(oferta)
                 if len(acumulado) >= self.limite_por_fuente:
                     break
 
@@ -286,16 +292,21 @@ class ScraperOrchestrator:
         self,
         perfil: PerfilBusqueda | None = None,
         palabras: list[str] | None = None,
-    ) -> dict[str, list[str]]:
-        """Consulta las tres fuentes y devuelve titulos agrupados por portal."""
+    ) -> dict[str, list[OfertaLaboral]]:
+        """Consulta las tres fuentes y devuelve ofertas agrupadas por portal."""
         return {
             fuente: self.extraer_de_fuente(fuente, perfil=perfil, palabras=palabras)
             for fuente in self.FUENTES
         }
 
     @staticmethod
+    def _seguro_para_terminal(texto: str) -> str:
+        encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+        return texto.encode(encoding, errors="replace").decode(encoding)
+
+    @staticmethod
     def imprimir_resultados(
-        resultados: dict[str, list[str]],
+        resultados: dict[str, list[OfertaLaboral]],
         perfil: PerfilBusqueda | None = None,
         palabras: list[str] | None = None,
         limite_por_fuente: int | None = None,
@@ -314,15 +325,27 @@ class ScraperOrchestrator:
         print(f"--- Busqueda en portales de empleo{titulo_busqueda}{limite_txt} ---\n")
 
         for fuente in ScraperOrchestrator.FUENTES:
-            titulos = resultados.get(fuente, [])
-            print(f"## {ScraperOrchestrator.ETIQUETAS[fuente]} ({len(titulos)} ofertas)")
+            ofertas = resultados.get(fuente, [])
+            print(f"## {ScraperOrchestrator.ETIQUETAS[fuente]} ({len(ofertas)} ofertas)")
 
-            if not titulos:
+            if not ofertas:
                 print("   No se encontraron ofertas.\n")
                 continue
 
-            for i, titulo in enumerate(titulos, start=1):
-                print(f"  {i:2}. {titulo}")
+            for i, oferta in enumerate(ofertas, start=1):
+                titulo = ScraperOrchestrator._seguro_para_terminal(oferta.titulo)
+                print(f"{i}-{titulo}")
+                descripcion = oferta.descripcion.strip() or "(sin descripcion disponible)"
+                print(ScraperOrchestrator._seguro_para_terminal(descripcion))
+                print()
+                print("Preguntas para el cargo:")
+                if oferta.preguntas:
+                    for pregunta in oferta.preguntas:
+                        linea = f"- {pregunta}"
+                        print(ScraperOrchestrator._seguro_para_terminal(linea))
+                else:
+                    print(MSG_SIN_PREGUNTAS)
+                print()
             print()
 
 
@@ -481,21 +504,26 @@ def solicitar_limite() -> int:
         return limite
 
 
-def enviar_a_n8n(resultados: dict[str, list[str]]) -> None:
+def enviar_a_n8n(resultados: dict[str, list[OfertaLaboral]]) -> None:
     URL = os.environ.get("URL_WEBHOOK_N8N")
-    
+
     if not URL:
         print("\n[AVISO]: No se configuró la variable 'URL_WEBHOOK_N8N' en el archivo .env.")
         print("Se omitirá el envío de datos a n8n.")
         return
 
     lista_trabajos = []
-    for fuente, titulos in resultados.items():
-        for titulo in titulos:
-            lista_trabajos.append({
-                "fuente": fuente,
-                "titulo": titulo
-            })
+    for fuente, ofertas in resultados.items():
+        for oferta in ofertas:
+            lista_trabajos.append(
+                {
+                    "fuente": fuente,
+                    "titulo": oferta.titulo,
+                    "descripcion": oferta.descripcion,
+                    "preguntas": oferta.preguntas,
+                    "url": oferta.url,
+                }
+            )
 
     payload = {
         "total_ofertas": len(lista_trabajos),
@@ -512,10 +540,7 @@ def enviar_a_n8n(resultados: dict[str, list[str]]) -> None:
 
 
 if __name__ == "__main__":
-    if __package__ in (None, ""):
-        sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-    from app.database import insertar_fila_trabajo
+    load_dotenv()
 
     if len(sys.argv) > 1:
         perfil, palabras, limite = _parsear_argumentos(sys.argv[1:])
@@ -547,10 +572,20 @@ if __name__ == "__main__":
     )
     
     print("--- Guardando ofertas en la base de datos ---")
-    for fuente, titulos in resultados.items():
-        for titulo in titulos:
+    for fuente, ofertas in resultados.items():
+        for oferta in ofertas:
             print("saltado")
-            ##insertar_fila_trabajo(titulo=titulo, compañia="Desconocida", ubicacion=False)
+            ##insertar_fila_trabajo(
+            ##    titulo=oferta.titulo,
+            ##    compania="Desconocida",
+            ##    ubicacion="",
+            ##    rango_salarial="",
+            ##    descripcion=oferta.descripcion,
+            ##    url=oferta.url,
+            ##    estado=0,
+            ##    fecha_creacion="",
+            ##    id_fuente=0,
+            ##)
 
 
     

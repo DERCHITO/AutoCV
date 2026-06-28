@@ -8,6 +8,8 @@ if __package__ in (None, ""):
 import requests
 
 from app.scrapers.base import BaseScraper
+from app.scrapers.models import OfertaLaboral
+from app.scrapers.preguntas import completar_preguntas
 
 
 class LaborumScraper(BaseScraper):
@@ -28,25 +30,47 @@ class LaborumScraper(BaseScraper):
             }
         )
 
-    def extraer_titulos(
+    @staticmethod
+    def _oferta_desde_item(item: dict) -> OfertaLaboral | None:
+        titulo = item.get("titulo", "").strip()
+        if not titulo:
+            return None
+
+        aviso_id = item.get("id")
+        url = f"https://www.laborum.cl/empleos/{aviso_id}.html" if aviso_id else ""
+        descripcion = item.get("detalle", "").strip()
+        preguntas = completar_preguntas(
+            [],
+            descripcion,
+            incluye_preguntas_portal=bool(item.get("tienePreguntas")),
+        )
+
+        return OfertaLaboral(
+            titulo=titulo,
+            descripcion=descripcion,
+            url=url,
+            preguntas=preguntas,
+        )
+
+    def extraer_ofertas(
         self,
         query: str = "",
         filtros: list | None = None,
         sort: str = "RECIENTES",
         max_resultados: int | None = None,
-    ) -> list[str]:
-        """Devuelve titulos para la consulta. Pagina hasta agotar o alcanzar max_resultados."""
+    ) -> list[OfertaLaboral]:
+        """Devuelve ofertas con titulo y descripcion para la consulta."""
         url = f"{self.url_base}/api/avisos/searchV2"
-        titulos: list[str] = []
+        ofertas: list[OfertaLaboral] = []
         pagina = 0
 
         while True:
-            if max_resultados is not None and len(titulos) >= max_resultados:
+            if max_resultados is not None and len(ofertas) >= max_resultados:
                 break
 
             page_size = self.PAGE_SIZE
             if max_resultados is not None:
-                page_size = min(self.PAGE_SIZE, max_resultados - len(titulos))
+                page_size = min(self.PAGE_SIZE, max_resultados - len(ofertas))
 
             params = {"pageSize": page_size, "page": pagina, "sort": sort}
             body = {
@@ -72,26 +96,43 @@ class LaborumScraper(BaseScraper):
                 print("Error: Laborum devolvio una respuesta no JSON.")
                 break
 
-            ofertas = data.get("content", [])
-            if not ofertas:
+            items = data.get("content", [])
+            if not items:
                 break
 
-            for oferta in ofertas:
-                titulo = oferta.get("titulo", "").strip()
-                if titulo:
-                    titulos.append(titulo)
-                if max_resultados is not None and len(titulos) >= max_resultados:
+            for item in items:
+                oferta = self._oferta_desde_item(item)
+                if oferta:
+                    ofertas.append(oferta)
+                if max_resultados is not None and len(ofertas) >= max_resultados:
                     break
 
-            if max_resultados is not None and len(titulos) >= max_resultados:
+            if max_resultados is not None and len(ofertas) >= max_resultados:
                 break
-            if len(ofertas) < page_size:
+            if len(items) < page_size:
                 break
             pagina += 1
 
         if max_resultados is not None:
-            return titulos[:max_resultados]
-        return titulos
+            return ofertas[:max_resultados]
+        return ofertas
+
+    def extraer_titulos(
+        self,
+        query: str = "",
+        filtros: list | None = None,
+        sort: str = "RECIENTES",
+        max_resultados: int | None = None,
+    ) -> list[str]:
+        return [
+            o.titulo
+            for o in self.extraer_ofertas(
+                query=query,
+                filtros=filtros,
+                sort=sort,
+                max_resultados=max_resultados,
+            )
+        ]
 
     def extraer_datos(self, endpoint: str = "") -> list[str]:
         return self.extraer_titulos(query=endpoint)

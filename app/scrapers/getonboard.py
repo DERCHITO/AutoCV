@@ -8,6 +8,7 @@ if __package__ in (None, ""):
 import requests
 
 from app.scrapers.base import BaseScraper
+from app.scrapers.models import OfertaLaboral
 
 
 class GetOnBoardScraper(BaseScraper):
@@ -15,6 +16,18 @@ class GetOnBoardScraper(BaseScraper):
 
     API_PREFIX = "/api/v0"
     PER_PAGE_MAX = 120
+
+    CAMPOS_DESCRIPCION = (
+        "projects",
+        "description_headline",
+        "description",
+        "functions_headline",
+        "functions",
+        "benefits_headline",
+        "benefits",
+        "desirable_headline",
+        "desirable",
+    )
 
     def __init__(self, url_base: str = "https://www.getonbrd.com", lang: str = "es"):
         super().__init__(url_base)
@@ -44,37 +57,64 @@ class GetOnBoardScraper(BaseScraper):
             print("Error: Get on Board devolvio una respuesta no JSON.")
             return None
 
-    def _titulos_desde_data(self, data: list) -> list[str]:
-        titulos: list[str] = []
-        for oferta in data:
-            titulo = oferta.get("attributes", {}).get("title", "").strip()
-            if titulo:
-                titulos.append(titulo)
-        return titulos
+    @classmethod
+    def _descripcion_desde_attributes(cls, attrs: dict) -> str:
+        partes: list[str] = []
+        for campo in cls.CAMPOS_DESCRIPCION:
+            texto = OfertaLaboral.limpiar_html(attrs.get(campo, ""))
+            if texto:
+                partes.append(texto)
+        return "\n\n".join(partes)
 
-    def extraer_titulos(
+    def _oferta_desde_item(self, item: dict) -> OfertaLaboral | None:
+        attrs = item.get("attributes", {})
+        titulo = attrs.get("title", "").strip()
+        if not titulo:
+            return None
+
+        job_id = item.get("id", "")
+        url = f"{self.url_base}/jobs/{job_id}" if job_id else ""
+        descripcion = self._descripcion_desde_attributes(attrs)
+        preguntas: list[str] = []
+
+        return OfertaLaboral(
+            titulo=titulo,
+            descripcion=descripcion,
+            url=url,
+            preguntas=preguntas,
+        )
+
+    def _ofertas_desde_data(self, data: list) -> list[OfertaLaboral]:
+        ofertas: list[OfertaLaboral] = []
+        for item in data:
+            oferta = self._oferta_desde_item(item)
+            if oferta:
+                ofertas.append(oferta)
+        return ofertas
+
+    def extraer_ofertas(
         self,
         categoria: str | None = None,
         query: str | None = None,
         page: int = 1,
         max_resultados: int | None = None,
-    ) -> list[str]:
-        """Devuelve titulos para la consulta. Pagina hasta agotar o alcanzar max_resultados."""
+    ) -> list[OfertaLaboral]:
+        """Devuelve ofertas con titulo y descripcion para la consulta."""
         if not query and not categoria:
             print("Error: debes indicar `categoria` o `query`.")
             return []
 
-        titulos: list[str] = []
+        ofertas: list[OfertaLaboral] = []
         pagina = max(page, 1)
 
         while True:
-            if max_resultados is not None and len(titulos) >= max_resultados:
+            if max_resultados is not None and len(ofertas) >= max_resultados:
                 break
 
             faltantes = (
                 self.PER_PAGE_MAX
                 if max_resultados is None
-                else max_resultados - len(titulos)
+                else max_resultados - len(ofertas)
             )
             per_page = min(self.PER_PAGE_MAX, faltantes)
 
@@ -101,12 +141,12 @@ class GetOnBoardScraper(BaseScraper):
             if not data:
                 break
 
-            for titulo in self._titulos_desde_data(data):
-                titulos.append(titulo)
-                if max_resultados is not None and len(titulos) >= max_resultados:
+            for oferta in self._ofertas_desde_data(data):
+                ofertas.append(oferta)
+                if max_resultados is not None and len(ofertas) >= max_resultados:
                     break
 
-            if max_resultados is not None and len(titulos) >= max_resultados:
+            if max_resultados is not None and len(ofertas) >= max_resultados:
                 break
 
             meta = payload.get("meta", {})
@@ -116,8 +156,25 @@ class GetOnBoardScraper(BaseScraper):
             pagina += 1
 
         if max_resultados is not None:
-            return titulos[:max_resultados]
-        return titulos
+            return ofertas[:max_resultados]
+        return ofertas
+
+    def extraer_titulos(
+        self,
+        categoria: str | None = None,
+        query: str | None = None,
+        page: int = 1,
+        max_resultados: int | None = None,
+    ) -> list[str]:
+        return [
+            o.titulo
+            for o in self.extraer_ofertas(
+                categoria=categoria,
+                query=query,
+                page=page,
+                max_resultados=max_resultados,
+            )
+        ]
 
     def extraer_datos(self, endpoint: str = "") -> list[str]:
         if endpoint.startswith("search:"):
