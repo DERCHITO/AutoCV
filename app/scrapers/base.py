@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import re
 import sys
 import unicodedata
@@ -479,6 +481,36 @@ def solicitar_limite() -> int:
         return limite
 
 
+def enviar_a_n8n(resultados: dict[str, list[str]]) -> None:
+    URL = os.environ.get("URL_WEBHOOK_N8N")
+    
+    if not URL:
+        print("\n[AVISO]: No se configuró la variable 'URL_WEBHOOK_N8N' en el archivo .env.")
+        print("Se omitirá el envío de datos a n8n.")
+        return
+
+    lista_trabajos = []
+    for fuente, titulos in resultados.items():
+        for titulo in titulos:
+            lista_trabajos.append({
+                "fuente": fuente,
+                "titulo": titulo
+            })
+
+    payload = {
+        "total_ofertas": len(lista_trabajos),
+        "trabajos": lista_trabajos
+    }
+
+    try:
+        print(f"\n--- Enviando {len(lista_trabajos)} ofertas a tu n8n local ---")
+        respuesta = requests.post(URL, json=payload, timeout=15)
+        respuesta.raise_for_status()
+        print("¡Datos enviados exitosamente a n8n!")
+    except requests.exceptions.RequestException as e:
+        print(f"Error al enviar datos a n8n: {e}")
+
+
 if __name__ == "__main__":
     if __package__ in (None, ""):
         sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -513,7 +545,13 @@ if __name__ == "__main__":
         palabras=palabras,
         limite_por_fuente=limite,
     )
+    
     print("--- Guardando ofertas en la base de datos ---")
     for fuente, titulos in resultados.items():
         for titulo in titulos:
-            insertar_fila_trabajo(titulo=titulo, compañia="Desconocida", ubicacion=False)
+            print("saltado")
+            ##insertar_fila_trabajo(titulo=titulo, compañia="Desconocida", ubicacion=False)
+
+
+    
+    enviar_a_n8n(resultados)
