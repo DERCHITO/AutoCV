@@ -1,0 +1,70 @@
+{
+  "name": "POC - Conexion y correo",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "44d051bf-b4c7-4825-91d4-1d9623d8b641",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "db8eae06-c023-4f37-a05c-89d3296b3e89",
+      "name": "Webhook",
+      "webhookId": "44d051bf-b4c7-4825-91d4-1d9623d8b641"
+    },
+    {
+      "parameters": {
+        "sendTo": "camilito.pedreros@gmail.com, crisbalcazara@gmail.com, cbalcazar@utem.cl, cpedreros@utem.cl",
+        "subject": "Prueba conexion N8N",
+        "message": "=Si puedes ver este mensaje, la conexion con N8N y el proyecto de auto curriculum se realizo correctamente.<br><br>\n{{ $json.body.trabajos.map(t => `• <b>${t.fuente.toUpperCase()}:</b> ${t.titulo}`).join('<br>') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "b2e9ad2f-7f61-414f-b27b-102e3b736372",
+      "name": "Send a message",
+      "webhookId": "f6586675-e31a-4847-a0a0-6ed4d94090d0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "0txXhQunt84WUJNs",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d79a173e-1317-43a5-b606-5851f1bebe98",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8b7481b6a82171e84207dff345801b328968f53f619a427091eea0c577d643fa"
+  },
+  "id": "tZwhm7QE3WKV3UwL",
+  "tags": []
+}
