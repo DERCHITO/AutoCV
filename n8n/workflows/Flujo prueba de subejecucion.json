@@ -1,0 +1,71 @@
+{
+  "name": "Flujo prueba de subejecucion",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "id_trabajo",
+              "type": "number"
+            },
+            {
+              "name": "pregunta"
+            },
+            {
+              "name": "tipo_pregunta",
+              "type": "number"
+            },
+            {
+              "name": "respuesta_generada_ia"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        352
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "b5942df6-0160-4ef7-965d-57583acdc8aa",
+      "name": "Replace me with your logic",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        528,
+        352
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Replace me with your logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0b24ec75-0d68-4f3d-8d7c-1d55957e4b6b",
+  "meta": {
+    "instanceId": "8b7481b6a82171e84207dff345801b328968f53f619a427091eea0c577d643fa"
+  },
+  "id": "Y8vwrGZxcXljYp0c",
+  "tags": []
+}

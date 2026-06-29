@@ -1,7 +1,8 @@
 import os
-
+import requests
 from dotenv import load_dotenv
 from supabase import Client, create_client
+from typing import List, Dict, Any
 
 load_dotenv()
 
@@ -24,28 +25,37 @@ def insertar_fila_trabajo(
     estado: int,
     fecha_creacion: str,
     id_fuente: int,
+    preguntas: List[Dict[str, Any]]  # <-- Definimos que es una lista de objetos/diccionarios
 ):
+    URL = os.environ.get("URL_N8N_INSERCION_TRABAJO_SUPABASE")
+
+    if not URL:
+        print("\n[AVISO]: No se configuró la variable 'URL_N8N_INSERCION_TRABAJO_SUPABASE' en el archivo .env.")
+        print("Se omitirá la insercion del trabajo en supabase.")
+        return
+
+    # Construimos el payload incluyendo la lista de preguntas
+    payload = {
+        "titulo": titulo,
+        "compania": compania,
+        "ubicacion": ubicacion,
+        "rango_salarial": rango_salarial,
+        "descripcion": descripcion,
+        "url": url,
+        "estado": estado,
+        "fecha_creacion": fecha_creacion,
+        "id_fuente": id_fuente,
+        "preguntas": preguntas  # <-- Se envía como un array JSON nativo
+    }
+
     try:
         print(f"🚀 Insertando fila a tabla trabajos: '{titulo}'...")
-        response = supabase.table("trabajos").insert([
-            {
-                "titulo": titulo,
-                "compania": compania,
-                "ubicacion": ubicacion,
-                "rango_salarial": rango_salarial,
-                "descripcion": descripcion,
-                "url": url,
-                "estado": estado,
-                "fecha_creacion": fecha_creacion,
-                "id_fuente": id_fuente
-            }
-        ]).execute()
-
-        print("✅ Trabajo guardado con éxito.")
-        return response.data  # Supabase devuelve una lista con las filas insertadas
-    except Exception as e:
-        print(f"❌ Error al insertar trabajo: {e}")
-        return None
+        # Al usar json=payload, 'requests' convierte automáticamente la lista de Python a un array JSON
+        respuesta = requests.post(URL, json=payload, timeout=15)
+        respuesta.raise_for_status()
+        print("¡Flujo de n8n invocado exitosamente!")
+    except requests.exceptions.RequestException as e:
+        print(f"Error al invocar el servicio de N8N: {e}")
 
 
 def insertar_fila_pregunta(
@@ -76,31 +86,39 @@ def insertar_fila_pregunta(
 if __name__ == "__main__":
     print("--- Iniciando proceso de inserción ---")
 
+
+    lista_de_preguntas = [
+        {"texto_pregunta": "¿Cuántos años de experiencia tienes en Python?", "tipo": "texto"},
+        {"texto_pregunta": "¿Cuál es tu pretensión salarial?", "tipo": "numero"},
+        {"texto_pregunta": "¿Cuál es tu pretensión salarial?", "tipo": "numero"},
+        {"texto_pregunta": "¿Disponibilidad inmediata?", "tipo": "booleano"}
+    ]
     # 1. Insertamos el trabajo con datos de prueba (ya que no tienen valores por defecto)
     nuevo_trabajo = insertar_fila_trabajo(
-        titulo="Full stack en Copec",
+        titulo="PRUEBA N8N",
         compania="Copec",
         ubicacion="Santiago, Chile",
         rango_salarial="2.500.000 - 3.000.000 CLP",
-        descripcion="Buscamos desarrollador Full Stack con experiencia en Python y React.",
+        descripcion="ESTA ES UNA PRUEBA DE CONEXION CON N8N DESDE EL SCRIPT",
         url="https://empleos.copec.cl/123",
         estado=1,
         fecha_creacion="2026-06-24",
-        id_fuente=1
+        id_fuente=1,
+        preguntas=lista_de_preguntas
     )
 
-    # 2. Si el trabajo se insertó correctamente, extraemos su ID para la pregunta
-    if nuevo_trabajo and len(nuevo_trabajo) > 0:
-        # Supabase devuelve una lista, tomamos el id del primer elemento devuelto
-        trabajo_id = nuevo_trabajo[0]["id"]
-        print(f"🔗 ID generado para el trabajo: {trabajo_id}")
+    # # 2. Si el trabajo se insertó correctamente, extraemos su ID para la pregunta
+    # if nuevo_trabajo and len(nuevo_trabajo) > 0:
+    #     # Supabase devuelve una lista, tomamos el id del primer elemento devuelto
+    #     trabajo_id = nuevo_trabajo[0]["id"]
+    #     print(f"🔗 ID generado para el trabajo: {trabajo_id}")
 
-        # 3. Insertamos la pregunta asociada a ese trabajo
-        insertar_fila_pregunta(
-            id_trabajo=trabajo_id,
-            pregunta="¿Cuántos años de experiencia tienes con React?",
-            tipo_pregunta=1,
-            respuesta_generada_ia="El candidato ideal debe contar con al menos 3 años..."
-        )
-    else:
-        print("⚠️ No se pudo obtener el ID del trabajo, se cancela la inserción de la pregunta.")
+    #     # 3. Insertamos la pregunta asociada a ese trabajo
+    #     insertar_fila_pregunta(
+    #         id_trabajo=trabajo_id,
+    #         pregunta="¿Cuántos años de experiencia tienes con React?",
+    #         tipo_pregunta=1,
+    #         respuesta_generada_ia="El candidato ideal debe contar con al menos 3 años..."
+    #     )
+    # else:
+    #     print("⚠️ No se pudo obtener el ID del trabajo, se cancela la inserción de la pregunta.")
