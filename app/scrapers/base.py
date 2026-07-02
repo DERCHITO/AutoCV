@@ -524,8 +524,7 @@ def iniciar_n8n():
     print("n8n no está ejecutándose. Iniciando servicio...")
 
     try:
-        # Popen lanza n8n en segundo plano para que tu script de Python pueda continuar.
-        # stdout y stderr evitan que los logs de n8n llenen tu consola.
+        # Popen lanza n8n en segundo plano
         subprocess.Popen(
             ["n8n"],
             stdout=subprocess.DEVNULL,
@@ -533,18 +532,23 @@ def iniciar_n8n():
             shell=True,
         )
 
-        # Esperar unos segundos a que el servicio levante completamente
-        print("Esperando a que n8n responda...")
-        for _ in range(10):  # Intenta conectarse durante 10 segundos máximo
+        # Esperar a que el servicio levante completamente ANTES de abrir el navegador
+        print("Esperando a que n8n responda en el puerto 5678...")
+        for i in range(15):  # Subimos a 15 segundos por si acaso
             if n8n_esta_activo():
                 print("¡n8n se inició correctamente y está listo!")
+                #abrir_en_navegador()  # Abrir solo cuando ya está activo
                 return
+            
+            print(f"  Intentando conexión... (segundo {i+1}/15)")
             time.sleep(1)
-            abrir_en_navegador()
-            return
+        
+        # Si sale del bucle es porque se agotó el tiempo de espera
         print(
-            "Aviso: Se envió la orden de abrir n8n, pero tarda en responder. Continuando..."
+            "\nAviso: Se envió la orden de abrir n8n, pero tardó demasiado en responder.\n"
+            "Intentaremos abrir el navegador de todas formas..."
         )
+        #abrir_en_navegador()
 
     except FileNotFoundError:
         print(
@@ -599,7 +603,7 @@ if __name__ == "__main__":
 
     if n8n_esta_activo():
         print("n8n ya está ejecutándose. Saltando inicio.")
-        abrir_en_navegador()
+        #abrir_en_navegador()
     else:
         iniciar_n8n()
 
