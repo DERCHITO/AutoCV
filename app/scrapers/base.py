@@ -1,7 +1,11 @@
 import os
 import re
 import sys
+import socket
+import subprocess
+import time
 import unicodedata
+import webbrowser
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -504,6 +508,61 @@ def solicitar_limite() -> int:
         return limite
 
 
+
+def n8n_esta_activo(host="127.0.0.1", puerto=5678):
+    """Verifica si n8n ya está escuchando en el puerto local."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(2)  # Tiempo de espera de 2 segundos
+        try:
+            s.connect((host, puerto))
+            return True
+        except (ConnectionRefusedError, TimeoutError):
+            return False
+
+def iniciar_n8n():
+    """Inicia n8n en segundo plano usando la instalación global de npm."""
+    print("n8n no está ejecutándose. Iniciando servicio...")
+
+    try:
+        # Popen lanza n8n en segundo plano
+        subprocess.Popen(
+            ["n8n"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            shell=True,
+        )
+
+        # Esperar a que el servicio levante completamente ANTES de abrir el navegador
+        print("Esperando a que n8n responda en el puerto 5678...")
+        for i in range(15):  # Subimos a 15 segundos por si acaso
+            if n8n_esta_activo():
+                print("¡n8n se inició correctamente y está listo!")
+                #abrir_en_navegador()  # Abrir solo cuando ya está activo
+                return
+            
+            print(f"  Intentando conexión... (segundo {i+1}/15)")
+            time.sleep(1)
+        
+        # Si sale del bucle es porque se agotó el tiempo de espera
+        print(
+            "\nAviso: Se envió la orden de abrir n8n, pero tardó demasiado en responder.\n"
+            "Intentaremos abrir el navegador de todas formas..."
+        )
+        #abrir_en_navegador()
+
+    except FileNotFoundError:
+        print(
+            "\n[ERROR]: No se encontró el comando 'n8n'. "
+            "Asegúrate de que la terminal de Python reconozca n8n globalmente "
+            "(revisa si n8n está en las variables de entorno/PATH de tu sistema)."
+        )
+
+def abrir_en_navegador():
+    """Abre la URL local de n8n en el navegador predeterminado."""
+    url = "http://localhost:5678"
+    print(f"Abriendo {url} en el navegador...")
+    webbrowser.open(url)
+
 def enviar_a_n8n(resultados: dict[str, list[OfertaLaboral]]) -> None:
     URL = os.environ.get("URL_WEBHOOK_N8N")
 
@@ -540,6 +599,17 @@ def enviar_a_n8n(resultados: dict[str, list[OfertaLaboral]]) -> None:
 
 
 if __name__ == "__main__":
+    print("Verificando estado de n8n...")
+
+    if n8n_esta_activo():
+        print("n8n ya está ejecutándose. Saltando inicio.")
+        #abrir_en_navegador()
+    else:
+        iniciar_n8n()
+
+    # --- AQUÍ CONTINÚA EL RESTO DE TU CÓDIGO ---
+    print("\n[Continuando con el resto del script...]")
+
     load_dotenv()
 
     if len(sys.argv) > 1:
